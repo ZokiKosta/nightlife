@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Admin Login — NOCTURN{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-logo">NOCTURN</div>
+        <h2 class="auth-title">Admin Access</h2>
+        <p class="auth-sub">Enter your password to continue</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for cat, msg in messages %}
+              <div class="flash flash-{{ cat }}">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('admin.login') }}" class="auth-form">
+            <input type="password" name="password" placeholder="Admin Password" class="auth-input" autofocus required>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Enter</button>
+        </form>
+
+        <a href="{{ url_for('home.index') }}" class="auth-back">← Back to Home</a>
+    </div>
+</div>
+{% endblock %}

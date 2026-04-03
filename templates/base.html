@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NOCTURN — Find Your Night{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    {% block page_css %}{% endblock %}
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<div class="noise-overlay"></div>
+
+<nav class="navbar">
+    <a href="{{ url_for('home.index') }}" class="nav-logo">NOCTURN</a>
+    <div class="nav-links">
+        <a href="{{ url_for('home.index') }}" class="nav-link {% if request.endpoint == 'home.index' %}active{% endif %}">Home</a>
+        <a href="{{ url_for('events.index') }}" class="nav-link {% if request.blueprint == 'events' %}active{% endif %}">Events</a>
+        <a href="{{ url_for('admin.index') }}" class="nav-link nav-admin">Admin</a>
+    </div>
+    <button class="nav-hamburger" id="navHamburger">&#9776;</button>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+    <a href="{{ url_for('home.index') }}">Home</a>
+    <a href="{{ url_for('events.index') }}">Events</a>
+    <a href="{{ url_for('admin.index') }}">Admin</a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for cat, msg in messages %}
+        <div class="flash flash-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<main>
+{% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+    <div class="footer-inner">
+        <span class="footer-logo">NOCTURN</span>
+        <span class="footer-sub">Your city's nightlife, decoded.</span>
+        <span class="footer-copy">© 2025 Nocturn. All rights reserved.</span>
+    </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

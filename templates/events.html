@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Events — NOCTURN{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div class="container">
+        <p class="page-eyebrow">// LIVE FEED</p>
+        <h1 class="page-title">Events</h1>
+        <p class="page-sub">AI-decoded parties &amp; events scraped directly from Instagram</p>
+    </div>
+</div>
+
+<div class="events-page">
+    <div class="container">
+
+        <!-- TOOLBAR -->
+        <div class="events-toolbar">
+            <form class="search-form" method="GET" action="{{ url_for('events.index') }}">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search events, venues, locations..." class="search-input">
+                {% if current_genre %}
+                <input type="hidden" name="genre" value="{{ current_genre }}">
+                {% endif %}
+                <button type="submit" class="search-btn">🔍</button>
+            </form>
+
+            <div class="scrape-btn-wrap">
+                <button id="scrapeBtn" class="btn btn-primary btn-sm">
+                    <span id="scrapeBtnText">⚡ Refresh Events</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- GENRE FILTERS -->
+        {% if genres %}
+        <div class="genre-filters">
+            <a href="{{ url_for('events.index', q=search_query) }}" class="genre-chip {% if not current_genre %}active{% endif %}">All</a>
+            {% for g in genres %}
+            <a href="{{ url_for('events.index', genre=g, q=search_query) }}" class="genre-chip {% if current_genre == g %}active{% endif %}">{{ g }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- EVENTS GRID -->
+        {% if events %}
+        <div class="events-grid" id="eventsGrid">
+            {% for event in events %}
+            <article class="event-card" data-id="{{ event.id }}">
+                <a href="{{ url_for('events.detail', event_id=event.id) }}" class="event-card-link">
+                    <div class="ec-image">
+                        {% if event.image_url %}
+                        <img src="{{ event.image_url }}" alt="{{ event.title }}" loading="lazy" onerror="this.parentElement.classList.add('ec-image-fallback'); this.remove();">
+                        {% else %}
+                        <div class="ec-image-fallback-inner">🎶</div>
+                        {% endif %}
+                        {% if event.genre %}
+                        <span class="ec-genre-badge">{{ event.genre }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="ec-body">
+                        <h2 class="ec-title">{{ event.title }}</h2>
+
+                        <div class="ec-details">
+                            {% if event.venue or event.location %}
+                            <div class="ec-detail">
+                                <span class="ec-detail-icon">📍</span>
+                                <span>{{ event.venue or event.location }}</span>
+                            </div>
+                            {% endif %}
+                            {% if event.date %}
+                            <div class="ec-detail">
+                                <span class="ec-detail-icon">📅</span>
+                                <span>{{ event.date }}</span>
+                            </div>
+                            {% endif %}
+                            {% if event.start_time %}
+                            <div class="ec-detail">
+                                <span class="ec-detail-icon">🕙</span>
+                                <span>Doors: {{ event.start_time }}</span>
+                            </div>
+                            {% endif %}
+                            {% if event.entry_price %}
+                            <div class="ec-detail ec-detail-price">
+                                <span class="ec-detail-icon">🎟</span>
+                                <span>{{ event.entry_price }}</span>
+                            </div>
+                            {% endif %}
+                            {% if event.phone %}
+                            <div class="ec-detail">
+                                <span class="ec-detail-icon">📞</span>
+                                <span>{{ event.phone }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if event.description %}
+                        <p class="ec-desc">{{ event.description[:120] }}{% if event.description|length > 120 %}...{% endif %}</p>
+                        {% endif %}
+
+                        <div class="ec-footer">
+                            {% if event.instagram_profile %}
+                            <span class="ec-source">@{{ event.instagram_profile }}</span>
+                            {% endif %}
+                            {% if event.age_limit %}
+                            <span class="ec-age">{{ event.age_limit }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            </article>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🌑</div>
+            <h2>No Events Yet</h2>
+            <p>Hit "Refresh Events" to scrape Instagram profiles and find upcoming events.</p>
+            <button id="scrapeBtn2" class="btn btn-primary">⚡ Find Events Now</button>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- Scrape status toast -->
+<div class="scrape-toast" id="scrapeToast"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function triggerScrape() {
+    const btn = document.getElementById('scrapeBtn');
+    const btn2 = document.getElementById('scrapeBtn2');
+    const text = document.getElementById('scrapeBtnText');
+    const toast = document.getElementById('scrapeToast');
+
+    if (btn) btn.disabled = true;
+    if (text) text.textContent = '⏳ Scraping...';
+
+    showToast('🔍 Scraping Instagram profiles...', 'info');
+
+    try {
+        const res = await fetch('/events/scrape', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({usernames: []})
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`✅ Found ${data.events_found} events, saved ${data.events_saved} new ones!`, 'success');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showToast('❌ ' + (data.error || 'Scrape failed'), 'error');
+        }
+    } catch(e) {
+        showToast('❌ Network error. Check console.', 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+        if (text) text.textContent = '⚡ Refresh Events';
+    }
+}
+
+function showToast(msg, type) {
+    const t = document.getElementById('scrapeToast');
+    t.textContent = msg;
+    t.className = 'scrape-toast show scrape-toast-' + type;
+    setTimeout(() => t.className = 'scrape-toast', 4000);
+}
+
+document.getElementById('scrapeBtn')?.addEventListener('click', triggerScrape);
+document.getElementById('scrapeBtn2')?.addEventListener('click', triggerScrape);
+</script>
+{% endblock %}

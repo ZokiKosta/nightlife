@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}{{ event.title }} — NOCTURN{% endblock %}
+
+{% block content %}
+
+<div class="detail-page">
+    {% if event.image_url %}
+    <div class="detail-hero" style="background-image: url('{{ event.image_url }}')">
+        <div class="detail-hero-overlay"></div>
+    </div>
+    {% endif %}
+
+    <div class="container detail-container">
+        <a href="{{ url_for('events.index') }}" class="back-link">← Back to Events</a>
+
+        <div class="detail-grid">
+            <div class="detail-main">
+                <div class="detail-tags">
+                    {% if event.genre %}<span class="tag">{{ event.genre }}</span>{% endif %}
+                    {% if event.age_limit %}<span class="tag tag-age">{{ event.age_limit }}</span>{% endif %}
+                    {% if event.dress_code %}<span class="tag tag-dress">{{ event.dress_code }}</span>{% endif %}
+                </div>
+
+                <h1 class="detail-title">{{ event.title }}</h1>
+                {% if event.venue %}<p class="detail-venue">{{ event.venue }}</p>{% endif %}
+
+                {% if event.description %}
+                <p class="detail-desc">{{ event.description }}</p>
+                {% endif %}
+
+                {% if event.instagram_post_url %}
+                <a href="{{ event.instagram_post_url }}" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:1rem;">
+                    View on Instagram ↗
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="detail-sidebar">
+                <div class="detail-info-card">
+                    <h3 class="info-card-title">Event Details</h3>
+
+                    {% if event.date %}
+                    <div class="info-row">
+                        <span class="info-icon">📅</span>
+                        <div>
+                            <div class="info-label">Date</div>
+                            <div class="info-val">{{ event.date }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if event.start_time %}
+                    <div class="info-row">
+                        <span class="info-icon">🕙</span>
+                        <div>
+                            <div class="info-label">Doors Open</div>
+                            <div class="info-val">{{ event.start_time }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if event.entry_price %}
+                    <div class="info-row">
+                        <span class="info-icon">🎟</span>
+                        <div>
+                            <div class="info-label">Entry Price</div>
+                            <div class="info-val">{{ event.entry_price }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if event.location %}
+                    <div class="info-row">
+                        <span class="info-icon">📍</span>
+                        <div>
+                            <div class="info-label">Location</div>
+                            <div class="info-val">{{ event.location }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if event.phone %}
+                    <div class="info-row">
+                        <span class="info-icon">📞</span>
+                        <div>
+                            <div class="info-label">Reservations</div>
+                            <div class="info-val"><a href="tel:{{ event.phone }}" class="phone-link">{{ event.phone }}</a></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if event.instagram_profile %}
+                    <div class="info-row">
+                        <span class="info-icon">📸</span>
+                        <div>
+                            <div class="info-label">Source</div>
+                            <div class="info-val">
+                                <a href="https://instagram.com/{{ event.instagram_profile }}" target="_blank">@{{ event.instagram_profile }}</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if event.phone %}
+                <a href="tel:{{ event.phone }}" class="btn btn-primary" style="width:100%; text-align:center; margin-top:1rem;">
+                    📞 Reserve a Table
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

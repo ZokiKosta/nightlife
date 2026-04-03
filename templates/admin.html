@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Admin — NOCTURN{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <p class="page-eyebrow">// CONTROL PANEL</p>
+        <h1 class="page-title">Admin</h1>
+        <p class="page-sub">Manage Instagram profiles to scrape and review events</p>
+        <a href="{{ url_for('admin.logout') }}" class="btn btn-ghost btn-sm" style="margin-top:1rem;">Logout</a>
+    </div>
+</div>
+
+<div class="events-page">
+    <div class="container">
+
+        <!-- ADD PROFILE -->
+        <div class="admin-section">
+            <h2 class="admin-section-title">Add Instagram Profile</h2>
+            <form method="POST" action="{{ url_for('admin.add_profile') }}" class="admin-add-form">
+                <input type="text" name="username" placeholder="@clubname" class="search-input" required>
+                <input type="text" name="display_name" placeholder="Display Name (optional)" class="search-input">
+                <button type="submit" class="btn btn-primary">Add Profile</button>
+            </form>
+        </div>
+
+        <!-- SCRAPE ALL -->
+        <div class="admin-section">
+            <h2 class="admin-section-title">Scrape All Profiles</h2>
+            <button id="scrapeAllBtn" class="btn btn-primary">⚡ Scrape All Now</button>
+            <div id="scrapeStatus" style="margin-top:1rem; color: var(--purple-light); font-family: var(--font-body);"></div>
+        </div>
+
+        <!-- PROFILES LIST -->
+        <div class="admin-section">
+            <h2 class="admin-section-title">Tracked Profiles ({{ profiles|length }})</h2>
+            {% if profiles %}
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Display Name</th>
+                            <th>Active</th>
+                            <th>Last Scraped</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in profiles %}
+                        <tr>
+                            <td><a href="https://instagram.com/{{ p.username }}" target="_blank">@{{ p.username }}</a></td>
+                            <td>{{ p.display_name or '—' }}</td>
+                            <td>{{ '✅' if p.is_active else '❌' }}</td>
+                            <td>{{ p.last_scraped.strftime('%d %b %Y %H:%M') if p.last_scraped else 'Never' }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin.delete_profile', profile_id=p.id) }}" style="display:inline;" onsubmit="return confirm('Delete @{{ p.username }}?')">
+                                    <button type="submit" class="btn-danger-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted);">No profiles yet. Add one above.</p>
+            {% endif %}
+        </div>
+
+        <!-- EVENTS LIST -->
+        <div class="admin-section">
+            <h2 class="admin-section-title">All Events ({{ events|length }})</h2>
+            {% if events %}
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Venue</th>
+                            <th>Date</th>
+                            <th>Price</th>
+                            <th>Source</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ev in events %}
+                        <tr>
+                            <td><a href="{{ url_for('events.detail', event_id=ev.id) }}">{{ ev.title[:40] }}</a></td>
+                            <td>{{ ev.venue or '—' }}</td>
+                            <td>{{ ev.date or '—' }}</td>
+                            <td>{{ ev.entry_price or '—' }}</td>
+                            <td>{{ ('@' + ev.instagram_profile) if ev.instagram_profile else '—' }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin.delete_event', event_id=ev.id) }}" style="display:inline;" onsubmit="return confirm('Delete this event?')">
+                                    <button type="submit" class="btn-danger-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted);">No events yet. Add profiles and scrape.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<div class="scrape-toast" id="scrapeToast"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function scrapeAll() {
+    const btn = document.getElementById('scrapeAllBtn');
+    const status = document.getElementById('scrapeStatus');
+    btn.disabled = true;
+    btn.textContent = '⏳ Scraping...';
+    status.textContent = 'Contacting Instagram profiles...';
+
+    try {
+        const res = await fetch('/events/scrape', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({usernames: []})
+        });
+        const data = await res.json();
+        if (data.success) {
+            status.textContent = `✅ Done! Scraped ${data.scraped_posts} posts → found ${data.events_found} events → saved ${data.events_saved} new.`;
+            setTimeout(() => location.reload(), 2500);
+        } else {
+            status.textContent = '❌ ' + (data.error || 'Failed');
+        }
+    } catch(e) {
+        status.textContent = '❌ Network error.';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '⚡ Scrape All Now';
+    }
+}
+document.getElementById('scrapeAllBtn').addEventListener('click', scrapeAll);
+</script>
+{% endblock %}

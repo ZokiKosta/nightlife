@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}NOCTURN — Find Your Night{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-bg-glow"></div>
+    <div class="hero-content">
+        <p class="hero-eyebrow">// THE NIGHTLIFE RADAR</p>
+        <h1 class="hero-title">FIND YOUR<br><span class="hero-accent">NIGHT</span></h1>
+        <p class="hero-desc">
+            We track the pulse of the city — scraping every event, every party, every night out
+            from Instagram and decoding it with AI so you never miss a beat.
+        </p>
+        <div class="hero-cta">
+            <a href="{{ url_for('events.index') }}" class="btn btn-primary">Browse Events</a>
+            <a href="#how-it-works" class="btn btn-ghost">How It Works</a>
+        </div>
+        <div class="hero-stats">
+            <div class="stat">
+                <span class="stat-num">{{ total_events }}</span>
+                <span class="stat-label">Events Found</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+                <span class="stat-num">{{ total_profiles }}</span>
+                <span class="stat-label">Venues Tracked</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+                <span class="stat-num">24/7</span>
+                <span class="stat-label">Live Updates</span>
+            </div>
+        </div>
+    </div>
+    <div class="hero-visual">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="vinyl-ring"></div>
+    </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag">Process</span>
+            <h2 class="section-title">How NOCTURN Works</h2>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-num">01</div>
+                <div class="step-icon">📡</div>
+                <h3 class="step-title">We Scrape</h3>
+                <p class="step-desc">Our engine monitors Instagram profiles of clubs, promoters, and venues — capturing every post about upcoming events.</p>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-card">
+                <div class="step-num">02</div>
+                <div class="step-icon">🤖</div>
+                <h3 class="step-title">AI Decodes</h3>
+                <p class="step-desc">Gemini AI reads every caption and extracts the details that matter — date, time, price, location, dress code, and more.</p>
+            </div>
+            <div class="step-connector"></div>
+            <div class="step-card">
+                <div class="step-num">03</div>
+                <div class="step-icon">🎉</div>
+                <h3 class="step-title">You Party</h3>
+                <p class="step-desc">Browse structured, filtered events. No more scrolling through 10 profiles. Everything you need in one place.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- UPCOMING EVENTS PREVIEW -->
+{% if upcoming_events %}
+<section class="section section-dark">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag">Latest</span>
+            <h2 class="section-title">Fresh Events</h2>
+        </div>
+        <div class="events-preview-grid">
+            {% for event in upcoming_events %}
+            <a href="{{ url_for('events.detail', event_id=event.id) }}" class="event-preview-card">
+                {% if event.image_url %}
+                <div class="epc-img" style="background-image: url('{{ event.image_url }}')"></div>
+                {% else %}
+                <div class="epc-img epc-img-placeholder">🎶</div>
+                {% endif %}
+                <div class="epc-body">
+                    <div class="epc-meta">
+                        {% if event.genre %}<span class="tag">{{ event.genre }}</span>{% endif %}
+                        {% if event.date %}<span class="epc-date">{{ event.date }}</span>{% endif %}
+                    </div>
+                    <h3 class="epc-title">{{ event.title }}</h3>
+                    {% if event.venue %}<p class="epc-venue">📍 {{ event.venue }}</p>{% endif %}
+                    {% if event.entry_price %}<p class="epc-price">🎟 {{ event.entry_price }}</p>{% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        <div style="text-align:center; margin-top: 2.5rem;">
+            <a href="{{ url_for('events.index') }}" class="btn btn-primary">View All Events</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- FEATURES -->
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-tag">Features</span>
+            <h2 class="section-title">Everything You Need</h2>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Smart Search</h3>
+                <p>Filter events by genre, venue, or keyword — find exactly the kind of night you're after.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📅</div>
+                <h3>Date & Time</h3>
+                <p>AI extracts exact dates and opening hours so you know when to show up.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>Entry Price</h3>
+                <p>Know the cover charge before you leave home. No surprises at the door.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📞</div>
+                <h3>Reservations</h3>
+                <p>Direct contact numbers extracted from posts so you can book a table instantly.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📍</div>
+                <h3>Location</h3>
+                <p>Full address details parsed from every caption — no more guessing where the party is.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👗</div>
+                <h3>Dress Code</h3>
+                <p>Know the vibe before you go. AI spots dress code requirements automatically.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
