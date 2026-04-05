@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Admin — NOCTURN{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/events.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <div class="container">
@@ -116,32 +121,55 @@
 {% block extra_js %}
 <script>
 async function scrapeAll() {
-    const btn = document.getElementById('scrapeAllBtn');
+    const btn    = document.getElementById('scrapeAllBtn');
     const status = document.getElementById('scrapeStatus');
-    btn.disabled = true;
+
+    btn.disabled    = true;
     btn.textContent = '⏳ Scraping...';
-    status.textContent = 'Contacting Instagram profiles...';
+    status.textContent = 'Contacting APIs — this may take 30–60 seconds…';
+    status.className   = 'scrape-status-text loading';
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 180000);
 
     try {
         const res = await fetch('/events/scrape', {
-            method: 'POST',
+            method:  'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({usernames: []})
+            body:    JSON.stringify({usernames: []}),
+            signal:  controller.signal,
         });
-        const data = await res.json();
-        if (data.success) {
+
+        clearTimeout(timer);
+
+        let data = {};
+        try { data = await res.json(); } catch(_) {}
+
+        if (res.ok && data.success) {
             status.textContent = `✅ Done! Scraped ${data.scraped_posts} posts → found ${data.events_found} events → saved ${data.events_saved} new.`;
+            status.className   = 'scrape-status-text success';
             setTimeout(() => location.reload(), 2500);
         } else {
-            status.textContent = '❌ ' + (data.error || 'Failed');
+            status.textContent = '❌ ' + (data.error || `Server error ${res.status}`);
+            status.className   = 'scrape-status-text error';
+            console.error('[scrape]', res.status, data);
         }
+
     } catch(e) {
-        status.textContent = '❌ Network error.';
+        clearTimeout(timer);
+        status.className = 'scrape-status-text error';
+        if (e.name === 'AbortError') {
+            status.textContent = '⏱ Timed out after 3 minutes. Check Flask console for errors.';
+        } else {
+            status.textContent = '❌ Network error: ' + e.message;
+        }
+        console.error('[scrape]', e);
     } finally {
-        btn.disabled = false;
+        btn.disabled    = false;
         btn.textContent = '⚡ Scrape All Now';
     }
 }
+
 document.getElementById('scrapeAllBtn').addEventListener('click', scrapeAll);
 </script>
 {% endblock %}

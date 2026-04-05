@@ -1,0 +1,348 @@
+/* ================================================================
+   NOCTURN — event_detail.css
+   Covers: detail hero, back link, two-column grid,
+           info card, sidebar, reserve button, tags
+================================================================ */
+
+/* ── Full page wrapper ───────────────────────────────────────── */
+.detail-page {
+  padding-bottom: 7rem;
+}
+
+/* ================================================================
+   HERO BANNER (event image full-width)
+================================================================ */
+.detail-hero {
+  position: relative;
+  height: clamp(280px, 45vw, 480px);
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  /* entrance */
+  animation: heroReveal 0.7s var(--ease-out) forwards;
+}
+
+@keyframes heroReveal {
+  from { opacity: 0; transform: scale(1.03); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* gradient fade to page bg at bottom */
+.detail-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(5, 2, 14, 0.15) 0%,
+    rgba(5, 2, 14, 0.55) 60%,
+    var(--bg-void)       100%
+  );
+}
+
+/* ── Container offset when hero present ─────────────────────── */
+.detail-container {
+  padding-top: 2.5rem;
+  padding-bottom: 1rem;
+}
+
+/* negative pull-up when hero is rendered */
+.detail-hero + .container.detail-container {
+  margin-top: -60px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Back navigation ─────────────────────────────────────────── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2.2rem;
+  transition: color var(--t-fast), gap var(--t-fast);
+}
+.back-link:hover {
+  color: var(--purple-bright);
+  gap: 0.65rem;
+}
+
+/* ================================================================
+   TWO-COLUMN LAYOUT
+================================================================ */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 3.5rem;
+  align-items: start;
+}
+
+/* ================================================================
+   LEFT: MAIN CONTENT
+================================================================ */
+.detail-main {
+  animation: fadeUp 0.55s var(--ease-out) 0.1s both;
+}
+
+/* tag row */
+.detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+}
+
+/* shared .tag lives in home.css; page-specific variants: */
+.tag-age {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #f87171;
+}
+.tag-dress {
+  background: rgba(129, 140, 248, 0.1);
+  border-color: rgba(129, 140, 248, 0.3);
+  color: #a5b4fc;
+}
+
+/* event title */
+.detail-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 6vw, 5rem);
+  letter-spacing: 0.015em;
+  line-height: 0.92;
+  color: var(--text-primary);
+  margin-bottom: 0.7rem;
+}
+
+/* venue subtitle */
+.detail-venue {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--purple-bright);
+  margin-bottom: 1.75rem;
+  letter-spacing: 0.02em;
+}
+
+/* long description */
+.detail-desc {
+  font-size: 0.97rem;
+  font-weight: 300;
+  line-height: 1.82;
+  color: var(--text-secondary);
+  max-width: 620px;
+  white-space: pre-line; /* respect line breaks from AI */
+}
+
+/* raw caption section (collapsible-friendly) */
+.detail-caption-toggle {
+  margin-top: 2rem;
+}
+.detail-caption-toggle summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  user-select: none;
+  transition: color var(--t-fast);
+}
+.detail-caption-toggle summary:hover { color: var(--text-muted); }
+.detail-caption-toggle p {
+  margin-top: 1rem;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--text-dim);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ================================================================
+   RIGHT: SIDEBAR INFO CARD
+================================================================ */
+.detail-sidebar {
+  position: sticky;
+  top: calc(66px + 1.5rem); /* below sticky navbar */
+  animation: fadeUp 0.55s var(--ease-out) 0.2s both;
+}
+
+.detail-info-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 1.8rem;
+  box-shadow:
+    0 0   0   1px rgba(147, 51, 234, 0.06),
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    0 0   40px var(--purple-glow2);
+}
+
+/* card heading */
+.info-card-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+  margin-bottom: 1.4rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* individual info row */
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid rgba(147, 51, 234, 0.08);
+  transition: background var(--t-fast);
+}
+.info-row:last-child { border-bottom: none; padding-bottom: 0; }
+.info-row:first-of-type { padding-top: 0; }
+
+.info-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  padding-top: 2px;
+  filter: drop-shadow(0 0 4px var(--purple-glow));
+}
+
+.info-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.info-val {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+  word-break: break-word;
+}
+.info-val a {
+  color: var(--purple-bright);
+  transition: color var(--t-fast);
+}
+.info-val a:hover {
+  color: var(--pink-accent);
+  text-decoration: underline;
+}
+
+/* phone link special treatment */
+.phone-link {
+  color: var(--purple-bright) !important;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+}
+
+/* ── Reserve CTA button ──────────────────────────────────────── */
+.reserve-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 1.2rem;
+  padding: 0.95rem 1.5rem;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--purple-mid), var(--purple-core) 60%, #a855f7);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(147, 51, 234, 0.45), inset 0 1px 0 rgba(255,255,255,0.1);
+  transition:
+    background  var(--t-mid) var(--ease-out),
+    box-shadow  var(--t-mid) var(--ease-out),
+    transform   var(--t-fast) var(--ease-out);
+}
+.reserve-btn:hover {
+  background: linear-gradient(135deg, var(--purple-core), var(--purple-bright));
+  box-shadow: 0 0 44px rgba(147, 51, 234, 0.65), 0 6px 18px rgba(0,0,0,0.4);
+  transform: translateY(-2px);
+  color: #fff;
+}
+.reserve-btn:active { transform: translateY(0); }
+
+/* Instagram link button — inherits .btn .btn-ghost from home.css */
+.ig-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-mid);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.83rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition:
+    border-color var(--t-fast),
+    color        var(--t-fast),
+    background   var(--t-fast),
+    transform    var(--t-fast);
+}
+.ig-link-btn:hover {
+  border-color: var(--purple-bright);
+  color: var(--purple-bright);
+  background: var(--purple-glow2);
+  transform: translateY(-1px);
+}
+
+/* ================================================================
+   RESPONSIVE
+================================================================ */
+@media (max-width: 1024px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .detail-sidebar {
+    position: static; /* unstick on mobile */
+  }
+  .detail-info-card {
+    /* go horizontal on tablet */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 2rem;
+    align-items: start;
+  }
+  .info-card-title {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .detail-hero {
+    height: clamp(200px, 55vw, 300px);
+  }
+
+  .detail-grid { gap: 2rem; }
+
+  .detail-info-card {
+    display: block; /* back to single column */
+  }
+
+  .detail-title {
+    font-size: clamp(2.4rem, 10vw, 3.2rem);
+  }
+}

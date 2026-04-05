@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Events — NOCTURN{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/events.css') }}">
+{% endblock %}
+
 {% block content %}
 
 <div class="page-header">
@@ -131,42 +135,67 @@
 {% block extra_js %}
 <script>
 async function triggerScrape() {
-    const btn = document.getElementById('scrapeBtn');
+    const btn  = document.getElementById('scrapeBtn');
     const btn2 = document.getElementById('scrapeBtn2');
     const text = document.getElementById('scrapeBtnText');
-    const toast = document.getElementById('scrapeToast');
 
-    if (btn) btn.disabled = true;
+    if (btn)  btn.disabled  = true;
+    if (btn2) btn2.disabled = true;
     if (text) text.textContent = '⏳ Scraping...';
 
-    showToast('🔍 Scraping Instagram profiles...', 'info');
+    showToast('🔍 Contacting APIs, this may take 30–60 seconds…', 'info', 60000);
+
+    // 3-minute timeout — Apify can be slow
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 180000);
 
     try {
         const res = await fetch('/events/scrape', {
-            method: 'POST',
+            method:  'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({usernames: []})
+            body:    JSON.stringify({usernames: []}),
+            signal:  controller.signal,
         });
-        const data = await res.json();
-        if (data.success) {
-            showToast(`✅ Found ${data.events_found} events, saved ${data.events_saved} new ones!`, 'success');
-            setTimeout(() => location.reload(), 2000);
+
+        clearTimeout(timer);
+
+        // Try to parse JSON even on error responses
+        let data = {};
+        try { data = await res.json(); } catch(_) {}
+
+        if (res.ok && data.success) {
+            showToast(
+                `✅ Done! Found ${data.events_found} events, saved ${data.events_saved} new.`,
+                'success'
+            );
+            setTimeout(() => location.reload(), 2200);
         } else {
-            showToast('❌ ' + (data.error || 'Scrape failed'), 'error');
+            const msg = data.error || `Server error ${res.status}`;
+            showToast('❌ ' + msg, 'error');
+            console.error('[scrape]', res.status, data);
         }
+
     } catch(e) {
-        showToast('❌ Network error. Check console.', 'error');
+        clearTimeout(timer);
+        if (e.name === 'AbortError') {
+            showToast('⏱ Request timed out (3 min). Check server logs.', 'error');
+        } else {
+            showToast('❌ Network error: ' + e.message, 'error');
+            console.error('[scrape]', e);
+        }
     } finally {
-        if (btn) btn.disabled = false;
+        if (btn)  btn.disabled  = false;
+        if (btn2) btn2.disabled = false;
         if (text) text.textContent = '⚡ Refresh Events';
     }
 }
 
-function showToast(msg, type) {
+function showToast(msg, type, duration = 5000) {
     const t = document.getElementById('scrapeToast');
     t.textContent = msg;
     t.className = 'scrape-toast show scrape-toast-' + type;
-    setTimeout(() => t.className = 'scrape-toast', 4000);
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.className = 'scrape-toast'; }, duration);
 }
 
 document.getElementById('scrapeBtn')?.addEventListener('click', triggerScrape);

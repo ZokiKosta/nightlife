@@ -1,0 +1,408 @@
+/* ================================================================
+   NOCTURN — admin.css
+   Covers: admin layout, sections, tables, add form,
+           scrape status, auth/login card, danger buttons
+================================================================ */
+
+/* ── Admin page uses .events-page wrapper from events.css ─────
+   We add admin-specific overrides on top.
+================================================================ */
+
+/* ── Admin section cards ─────────────────────────────────────── */
+.admin-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 2rem 2.2rem;
+  margin-bottom: 1.75rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--t-mid) var(--ease-out);
+  /* entrance */
+  animation: fadeUp 0.45s var(--ease-out) both;
+}
+.admin-section:nth-child(1) { animation-delay: 0.05s; }
+.admin-section:nth-child(2) { animation-delay: 0.12s; }
+.admin-section:nth-child(3) { animation-delay: 0.19s; }
+.admin-section:nth-child(4) { animation-delay: 0.26s; }
+
+.admin-section:hover { border-color: var(--border-mid); }
+
+/* subtle corner accent */
+.admin-section::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 80px; height: 80px;
+  background: radial-gradient(circle at top right,
+    rgba(147, 51, 234, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+/* section title */
+.admin-section-title {
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  margin-bottom: 1.35rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* ── Add profile form ────────────────────────────────────────── */
+.admin-add-form {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+/* inputs in admin form get right border back */
+.admin-add-form .search-input {
+  border-right: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  min-width: 180px;
+  flex: 1;
+}
+.admin-add-form .search-input:focus {
+  border-color: var(--purple-core);
+  border-right-color: var(--purple-core);
+}
+
+/* ── Scrape status text ──────────────────────────────────────── */
+.scrape-status-text {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--purple-light);
+  font-family: var(--font-body);
+  min-height: 1.5rem;
+  transition: color var(--t-fast);
+}
+.scrape-status-text.error   { color: #fca5a5; }
+.scrape-status-text.success { color: #86efac; }
+
+/* loading dots animation */
+.scrape-status-text.loading::after {
+  content: '';
+  display: inline-block;
+  width: 1em;
+  animation: dots 1.4s steps(4, end) infinite;
+}
+@keyframes dots {
+  0%  { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
+
+/* progress bar */
+.scrape-progress {
+  height: 3px;
+  border-radius: 100px;
+  background: var(--bg-elevated);
+  margin-top: 1rem;
+  overflow: hidden;
+  display: none;
+}
+.scrape-progress.visible { display: block; }
+.scrape-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--purple-mid), var(--purple-bright));
+  border-radius: 100px;
+  transition: width 0.4s var(--ease-out);
+  box-shadow: 0 0 8px var(--purple-glow);
+}
+
+/* ================================================================
+   ADMIN TABLES
+================================================================ */
+.admin-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+/* header row */
+.admin-table thead tr {
+  background: var(--bg-elevated);
+}
+.admin-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+/* body rows */
+.admin-table tbody tr {
+  border-bottom: 1px solid rgba(147, 51, 234, 0.07);
+  transition: background var(--t-fast);
+}
+.admin-table tbody tr:last-child { border-bottom: none; }
+.admin-table tbody tr:hover { background: var(--bg-card-hover); }
+
+.admin-table td {
+  padding: 0.8rem 1rem;
+  color: var(--text-secondary);
+  vertical-align: middle;
+  line-height: 1.4;
+}
+
+/* links inside table */
+.admin-table td a {
+  color: var(--purple-bright);
+  font-weight: 500;
+  transition: color var(--t-fast);
+}
+.admin-table td a:hover {
+  color: var(--pink-accent);
+  text-decoration: underline;
+}
+
+/* empty row message */
+.admin-empty-row td {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* ── Danger delete button ────────────────────────────────────── */
+.btn-danger-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.32rem 0.8rem;
+  border-radius: var(--radius-xs);
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.28);
+  color: #f87171;
+  font-family: var(--font-body);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    background   var(--t-fast),
+    border-color var(--t-fast),
+    transform    var(--t-fast);
+}
+.btn-danger-sm:hover {
+  background: rgba(220, 38, 38, 0.22);
+  border-color: rgba(220, 38, 38, 0.5);
+  transform: scale(1.04);
+}
+.btn-danger-sm:active { transform: scale(0.97); }
+
+/* ── Status pill (active/inactive) ──────────────────────────── */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.18rem 0.6rem;
+  border-radius: 100px;
+}
+.status-pill.active {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  color: #86efac;
+}
+.status-pill.inactive {
+  background: rgba(100, 100, 120, 0.1);
+  border: 1px solid rgba(100, 100, 120, 0.2);
+  color: var(--text-dim);
+}
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+.status-pill.active   .status-dot { background: #4ade80; box-shadow: 0 0 5px #4ade80; }
+.status-pill.inactive .status-dot { background: var(--text-dim); }
+
+/* ── Count badge in section title ────────────────────────────── */
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 0.5rem;
+  border-radius: 100px;
+  background: var(--purple-glow2);
+  border: 1px solid var(--border-mid);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--purple-bright);
+}
+
+/* ================================================================
+   AUTH / LOGIN PAGE
+================================================================ */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ambient background */
+.auth-page::before {
+  content: '';
+  position: fixed;
+  top: 50%; left: 50%;
+  translate: -50% -50%;
+  width: 700px; height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(109, 31, 212, 0.18) 0%,
+    transparent 65%);
+  pointer-events: none;
+  animation: glowPulse 7s ease-in-out infinite;
+}
+
+.auth-card {
+  position: relative;
+  z-index: 2;
+  background: var(--bg-card);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-xl);
+  padding: 3.2rem 2.8rem 3rem;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow:
+    0 0 0 1px rgba(147, 51, 234, 0.06),
+    0 32px 80px rgba(0, 0, 0, 0.55),
+    0 0   60px var(--purple-glow2);
+  animation: fadeUp 0.5s var(--ease-out) forwards;
+}
+
+.auth-logo {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  letter-spacing: 0.1em;
+  color: var(--purple-bright);
+  text-shadow: 0 0 30px var(--purple-glow), 0 0 70px rgba(147,51,234,0.2);
+  display: block;
+  margin-bottom: 1.8rem;
+}
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  margin-bottom: 0.45rem;
+}
+
+.auth-sub {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  margin-bottom: 2.2rem;
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-input {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.82rem 1.1rem;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  text-align: center;
+  letter-spacing: 0.08em;
+  outline: none;
+  transition:
+    border-color var(--t-mid) var(--ease-out),
+    background   var(--t-mid) var(--ease-out),
+    box-shadow   var(--t-mid) var(--ease-out);
+}
+.auth-input::placeholder {
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+.auth-input:focus {
+  border-color: var(--purple-core);
+  background: var(--bg-card-hover);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.15);
+}
+
+/* full-width submit in auth */
+.auth-form .btn {
+  width: 100%;
+}
+
+.auth-back {
+  display: inline-block;
+  margin-top: 1.75rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  transition: color var(--t-fast);
+}
+.auth-back:hover { color: var(--text-muted); }
+
+/* ── Flash messages inside auth card ────────────────────────── */
+.auth-card .flash {
+  margin-bottom: 0.75rem;
+  text-align: left;
+}
+
+/* ================================================================
+   RESPONSIVE
+================================================================ */
+@media (max-width: 768px) {
+  .admin-add-form {
+    flex-direction: column;
+  }
+  .admin-add-form .search-input,
+  .admin-add-form .btn {
+    width: 100%;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  /* hide less important columns on mobile */
+  .admin-table .col-hide-mobile { display: none; }
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 2.5rem 1.75rem 2.25rem;
+    border-radius: var(--radius-lg);
+  }
+}
