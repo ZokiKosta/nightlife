@@ -474,3 +474,88 @@
     max-width: 100%;
   }
 }
+
+/* ================================================================
+   PAGINATION
+================================================================ */
+.results-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.83rem;
+  color: var(--text-muted);
+}
+.clear-filters {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--purple-core);
+  border: 1px solid var(--border-mid);
+  border-radius: 100px;
+  padding: 0.2rem 0.7rem;
+  transition: all var(--t-fast);
+}
+.clear-filters:hover {
+  background: var(--purple-glow2);
+  color: var(--purple-bright);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.pagination-sm {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+}
+
+.pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: all var(--t-fast) var(--ease-out);
+}
+.pg-btn:hover:not(.disabled):not(.active) {
+  border-color: var(--purple-core);
+  color: var(--purple-bright);
+  background: var(--purple-glow2);
+  transform: translateY(-1px);
+}
+.pg-btn.active {
+  background: linear-gradient(135deg, var(--purple-mid), var(--purple-core));
+  border-color: var(--purple-core);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(147,51,234,0.4);
+}
+.pg-btn.disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+.pg-prev, .pg-next { min-width: 80px; }
+.pg-ellipsis {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  padding: 0 0.2rem;
+}
+.pg-info {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  margin-left: 0.5rem;
+}

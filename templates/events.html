@@ -18,30 +18,42 @@
 <div class="events-page">
     <div class="container">
 
-        <!-- TOOLBAR -->
+        <!-- TOOLBAR: search only — scrape button removed for public -->
         <div class="events-toolbar">
             <form class="search-form" method="GET" action="{{ url_for('events.index') }}">
-                <input type="text" name="q" value="{{ search_query }}" placeholder="Search events, venues, locations..." class="search-input">
-                {% if current_genre %}
-                <input type="hidden" name="genre" value="{{ current_genre }}">
-                {% endif %}
+                <input type="text" name="q" value="{{ search_query }}"
+                       placeholder="Search events, venues, locations..." class="search-input">
+                {% if current_genre %}<input type="hidden" name="genre" value="{{ current_genre }}">{% endif %}
                 <button type="submit" class="search-btn">🔍</button>
             </form>
-
+            {% if is_admin %}
             <div class="scrape-btn-wrap">
                 <button id="scrapeBtn" class="btn btn-primary btn-sm">
                     <span id="scrapeBtnText">⚡ Refresh Events</span>
                 </button>
             </div>
+            {% endif %}
         </div>
 
         <!-- GENRE FILTERS -->
         {% if genres %}
         <div class="genre-filters">
-            <a href="{{ url_for('events.index', q=search_query) }}" class="genre-chip {% if not current_genre %}active{% endif %}">All</a>
+            <a href="{{ url_for('events.index', q=search_query) }}"
+               class="genre-chip {% if not current_genre %}active{% endif %}">All</a>
             {% for g in genres %}
-            <a href="{{ url_for('events.index', genre=g, q=search_query) }}" class="genre-chip {% if current_genre == g %}active{% endif %}">{{ g }}</a>
+            <a href="{{ url_for('events.index', genre=g, q=search_query) }}"
+               class="genre-chip {% if current_genre == g %}active{% endif %}">{{ g }}</a>
             {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- RESULTS META -->
+        {% if pagination.total > 0 %}
+        <div class="results-meta">
+            <span>{{ pagination.total }} event{{ 's' if pagination.total != 1 }}</span>
+            {% if search_query or current_genre %}
+            <a href="{{ url_for('events.index') }}" class="clear-filters">✕ Clear filters</a>
+            {% endif %}
         </div>
         {% endif %}
 
@@ -53,61 +65,38 @@
                 <a href="{{ url_for('events.detail', event_id=event.id) }}" class="event-card-link">
                     <div class="ec-image">
                         {% if event.image_url %}
-                        <img src="{{ event.image_url }}" alt="{{ event.title }}" loading="lazy" onerror="this.parentElement.classList.add('ec-image-fallback'); this.remove();">
+                        <img src="{{ event.image_url }}" alt="{{ event.title }}" loading="lazy"
+                             onerror="this.parentElement.classList.add('ec-image-fallback'); this.remove();">
                         {% else %}
                         <div class="ec-image-fallback-inner">🎶</div>
                         {% endif %}
-                        {% if event.genre %}
-                        <span class="ec-genre-badge">{{ event.genre }}</span>
-                        {% endif %}
+                        {% if event.genre %}<span class="ec-genre-badge">{{ event.genre }}</span>{% endif %}
                     </div>
                     <div class="ec-body">
                         <h2 class="ec-title">{{ event.title }}</h2>
-
                         <div class="ec-details">
                             {% if event.venue or event.location %}
-                            <div class="ec-detail">
-                                <span class="ec-detail-icon">📍</span>
-                                <span>{{ event.venue or event.location }}</span>
-                            </div>
+                            <div class="ec-detail"><span class="ec-detail-icon">📍</span><span>{{ event.venue or event.location }}</span></div>
                             {% endif %}
                             {% if event.date %}
-                            <div class="ec-detail">
-                                <span class="ec-detail-icon">📅</span>
-                                <span>{{ event.date }}</span>
-                            </div>
+                            <div class="ec-detail"><span class="ec-detail-icon">📅</span><span>{{ event.date }}</span></div>
                             {% endif %}
                             {% if event.start_time %}
-                            <div class="ec-detail">
-                                <span class="ec-detail-icon">🕙</span>
-                                <span>Doors: {{ event.start_time }}</span>
-                            </div>
+                            <div class="ec-detail"><span class="ec-detail-icon">🕙</span><span>Doors: {{ event.start_time }}</span></div>
                             {% endif %}
                             {% if event.entry_price %}
-                            <div class="ec-detail ec-detail-price">
-                                <span class="ec-detail-icon">🎟</span>
-                                <span>{{ event.entry_price }}</span>
-                            </div>
+                            <div class="ec-detail ec-detail-price"><span class="ec-detail-icon">🎟</span><span>{{ event.entry_price }}</span></div>
                             {% endif %}
                             {% if event.phone %}
-                            <div class="ec-detail">
-                                <span class="ec-detail-icon">📞</span>
-                                <span>{{ event.phone }}</span>
-                            </div>
+                            <div class="ec-detail"><span class="ec-detail-icon">📞</span><span>{{ event.phone }}</span></div>
                             {% endif %}
                         </div>
-
                         {% if event.description %}
                         <p class="ec-desc">{{ event.description[:120] }}{% if event.description|length > 120 %}...{% endif %}</p>
                         {% endif %}
-
                         <div class="ec-footer">
-                            {% if event.instagram_profile %}
-                            <span class="ec-source">@{{ event.instagram_profile }}</span>
-                            {% endif %}
-                            {% if event.age_limit %}
-                            <span class="ec-age">{{ event.age_limit }}</span>
-                            {% endif %}
+                            {% if event.instagram_profile %}<span class="ec-source">@{{ event.instagram_profile }}</span>{% endif %}
+                            {% if event.age_limit %}<span class="ec-age">{{ event.age_limit }}</span>{% endif %}
                         </div>
                     </div>
                 </a>
@@ -115,90 +104,101 @@
             {% endfor %}
         </div>
 
+        <!-- PAGINATION -->
+        {% if pagination.pages > 1 %}
+        <div class="pagination">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('events.index', page=pagination.prev_num, q=search_query, genre=current_genre) }}" class="pg-btn pg-prev">← Prev</a>
+            {% else %}<span class="pg-btn pg-prev disabled">← Prev</span>{% endif %}
+
+            {% set ws = [pagination.page - 2, 1] | max %}
+            {% set we = [pagination.page + 2, pagination.pages] | min %}
+            {% if ws > 1 %}
+            <a href="{{ url_for('events.index', page=1, q=search_query, genre=current_genre) }}" class="pg-btn">1</a>
+            {% if ws > 2 %}<span class="pg-ellipsis">…</span>{% endif %}
+            {% endif %}
+            {% for p in range(ws, we + 1) %}
+            <a href="{{ url_for('events.index', page=p, q=search_query, genre=current_genre) }}"
+               class="pg-btn {% if p == pagination.page %}active{% endif %}">{{ p }}</a>
+            {% endfor %}
+            {% if we < pagination.pages %}
+            {% if we < pagination.pages - 1 %}<span class="pg-ellipsis">…</span>{% endif %}
+            <a href="{{ url_for('events.index', page=pagination.pages, q=search_query, genre=current_genre) }}" class="pg-btn">{{ pagination.pages }}</a>
+            {% endif %}
+
+            {% if pagination.has_next %}
+            <a href="{{ url_for('events.index', page=pagination.next_num, q=search_query, genre=current_genre) }}" class="pg-btn pg-next">Next →</a>
+            {% else %}<span class="pg-btn pg-next disabled">Next →</span>{% endif %}
+
+            <span class="pg-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+        </div>
+        {% endif %}
+
         {% else %}
         <div class="empty-state">
             <div class="empty-icon">🌑</div>
             <h2>No Events Yet</h2>
-            <p>Hit "Refresh Events" to scrape Instagram profiles and find upcoming events.</p>
-            <button id="scrapeBtn2" class="btn btn-primary">⚡ Find Events Now</button>
+            <p>Check back soon — events are updated regularly.</p>
+            {% if is_admin %}
+            <button id="scrapeBtn2" class="btn btn-primary">⚡ Scrape Now</button>
+            {% endif %}
         </div>
         {% endif %}
 
     </div>
 </div>
 
-<!-- Scrape status toast -->
+{% if is_admin %}
 <div class="scrape-toast" id="scrapeToast"></div>
-
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
+{% if is_admin %}
 <script>
 async function triggerScrape() {
     const btn  = document.getElementById('scrapeBtn');
     const btn2 = document.getElementById('scrapeBtn2');
     const text = document.getElementById('scrapeBtnText');
-
     if (btn)  btn.disabled  = true;
     if (btn2) btn2.disabled = true;
     if (text) text.textContent = '⏳ Scraping...';
-
     showToast('🔍 Contacting APIs, this may take 30–60 seconds…', 'info', 60000);
-
-    // 3-minute timeout — Apify can be slow
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 180000);
-
     try {
         const res = await fetch('/events/scrape', {
-            method:  'POST',
-            headers: {'Content-Type': 'application/json'},
-            body:    JSON.stringify({usernames: []}),
-            signal:  controller.signal,
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({usernames: []}), signal: controller.signal,
         });
-
         clearTimeout(timer);
-
-        // Try to parse JSON even on error responses
         let data = {};
         try { data = await res.json(); } catch(_) {}
-
         if (res.ok && data.success) {
-            showToast(
-                `✅ Done! Found ${data.events_found} events, saved ${data.events_saved} new.`,
-                'success'
-            );
+            showToast(`✅ Done! Found ${data.events_found} events, saved ${data.events_saved} new.`, 'success');
             setTimeout(() => location.reload(), 2200);
         } else {
-            const msg = data.error || `Server error ${res.status}`;
-            showToast('❌ ' + msg, 'error');
-            console.error('[scrape]', res.status, data);
+            showToast('❌ ' + (data.error || `Error ${res.status}`), 'error');
         }
-
     } catch(e) {
         clearTimeout(timer);
-        if (e.name === 'AbortError') {
-            showToast('⏱ Request timed out (3 min). Check server logs.', 'error');
-        } else {
-            showToast('❌ Network error: ' + e.message, 'error');
-            console.error('[scrape]', e);
-        }
+        showToast(e.name === 'AbortError' ? '⏱ Timed out.' : '❌ ' + e.message, 'error');
     } finally {
         if (btn)  btn.disabled  = false;
         if (btn2) btn2.disabled = false;
         if (text) text.textContent = '⚡ Refresh Events';
     }
 }
-
 function showToast(msg, type, duration = 5000) {
     const t = document.getElementById('scrapeToast');
+    if (!t) return;
     t.textContent = msg;
     t.className = 'scrape-toast show scrape-toast-' + type;
     clearTimeout(t._timer);
     t._timer = setTimeout(() => { t.className = 'scrape-toast'; }, duration);
 }
-
 document.getElementById('scrapeBtn')?.addEventListener('click', triggerScrape);
 document.getElementById('scrapeBtn2')?.addEventListener('click', triggerScrape);
 </script>
+{% endif %}
 {% endblock %}

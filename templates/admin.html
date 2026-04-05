@@ -11,7 +11,7 @@
     <div class="container">
         <p class="page-eyebrow">// CONTROL PANEL</p>
         <h1 class="page-title">Admin</h1>
-        <p class="page-sub">Manage Instagram profiles to scrape and review events</p>
+        <p class="page-sub">Manage profiles, events &amp; archive</p>
         <a href="{{ url_for('admin.logout') }}" class="btn btn-ghost btn-sm" style="margin-top:1rem;">Logout</a>
     </div>
 </div>
@@ -19,96 +19,213 @@
 <div class="events-page">
     <div class="container">
 
-        <!-- ADD PROFILE -->
+        <!-- ── SEARCH ─────────────────────────────────────────────── -->
+        <div class="admin-section">
+            <h2 class="admin-section-title">🔍 Search</h2>
+            <form method="GET" action="{{ url_for('admin.index') }}" class="admin-search-form">
+                <input type="text" name="q" value="{{ search_query }}"
+                       placeholder="Search profiles, events, venues…"
+                       class="search-input admin-search-input">
+                <button type="submit" class="btn btn-primary">Search</button>
+                {% if search_query %}
+                <a href="{{ url_for('admin.index') }}" class="btn btn-ghost">✕ Clear</a>
+                {% endif %}
+            </form>
+            {% if search_query %}
+            <p class="admin-search-hint">Results for <strong>"{{ search_query }}"</strong></p>
+            {% endif %}
+        </div>
+
+        <!-- ── ADD PROFILE ────────────────────────────────────────── -->
         <div class="admin-section">
             <h2 class="admin-section-title">Add Instagram Profile</h2>
             <form method="POST" action="{{ url_for('admin.add_profile') }}" class="admin-add-form">
                 <input type="text" name="username" placeholder="@clubname" class="search-input" required>
                 <input type="text" name="display_name" placeholder="Display Name (optional)" class="search-input">
-                <button type="submit" class="btn btn-primary">Add Profile</button>
+                <button type="submit" class="btn btn-primary">Add</button>
             </form>
         </div>
 
-        <!-- SCRAPE ALL -->
+        <!-- ── SCRAPE ─────────────────────────────────────────────── -->
         <div class="admin-section">
-            <h2 class="admin-section-title">Scrape All Profiles</h2>
-            <button id="scrapeAllBtn" class="btn btn-primary">⚡ Scrape All Now</button>
-            <div id="scrapeStatus" style="margin-top:1rem; color: var(--purple-light); font-family: var(--font-body);"></div>
+            <h2 class="admin-section-title">Scrape &amp; Auto-Archive</h2>
+            <div class="admin-actions-row">
+                <button id="scrapeAllBtn" class="btn btn-primary">⚡ Scrape All Now</button>
+                <form method="POST" action="{{ url_for('admin.run_archive') }}" style="display:inline;">
+                    <button type="submit" class="btn btn-ghost">🗄 Run Auto-Archive</button>
+                </form>
+            </div>
+            <div id="scrapeStatus" class="scrape-status-text"></div>
+            <div class="scrape-progress" id="scrapeProgress">
+                <div class="scrape-progress-bar" id="scrapeBar"></div>
+            </div>
         </div>
 
-        <!-- PROFILES LIST -->
+        <!-- ── TRACKED PROFILES ───────────────────────────────────── -->
         <div class="admin-section">
-            <h2 class="admin-section-title">Tracked Profiles ({{ profiles|length }})</h2>
-            {% if profiles %}
+            <h2 class="admin-section-title">
+                Tracked Profiles <span class="count-badge">{{ profiles_pg.total }}</span>
+            </h2>
+            {% if profiles_pg.items %}
             <div class="admin-table-wrap">
                 <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Display Name</th>
-                            <th>Active</th>
-                            <th>Last Scraped</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
+                    <thead><tr>
+                        <th>Username</th><th>Display Name</th><th>Status</th>
+                        <th class="col-hide-mobile">Last Scraped</th><th>Action</th>
+                    </tr></thead>
                     <tbody>
-                        {% for p in profiles %}
-                        <tr>
-                            <td><a href="https://instagram.com/{{ p.username }}" target="_blank">@{{ p.username }}</a></td>
-                            <td>{{ p.display_name or '—' }}</td>
-                            <td>{{ '✅' if p.is_active else '❌' }}</td>
-                            <td>{{ p.last_scraped.strftime('%d %b %Y %H:%M') if p.last_scraped else 'Never' }}</td>
-                            <td>
-                                <form method="POST" action="{{ url_for('admin.delete_profile', profile_id=p.id) }}" style="display:inline;" onsubmit="return confirm('Delete @{{ p.username }}?')">
-                                    <button type="submit" class="btn-danger-sm">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
+                    {% for p in profiles_pg.items %}
+                    <tr>
+                        <td><a href="https://instagram.com/{{ p.username }}" target="_blank">@{{ p.username }}</a></td>
+                        <td>{{ p.display_name or '—' }}</td>
+                        <td>
+                            <span class="status-pill {{ 'active' if p.is_active else 'inactive' }}">
+                                <span class="status-dot"></span>{{ 'Active' if p.is_active else 'Paused' }}
+                            </span>
+                        </td>
+                        <td class="col-hide-mobile">{{ p.last_scraped.strftime('%d %b %Y %H:%M') if p.last_scraped else 'Never' }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.delete_profile', profile_id=p.id) }}"
+                                  style="display:inline;" onsubmit="return confirm('Delete @{{ p.username }}?')">
+                                <button type="submit" class="btn-danger-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% if profiles_pg.pages > 1 %}
+            <div class="pagination pagination-sm">
+                {% if profiles_pg.has_prev %}
+                <a href="{{ url_for('admin.index', p_page=profiles_pg.prev_num, q=search_query, e_page=e_page, a_page=a_page) }}" class="pg-btn">← Prev</a>
+                {% else %}<span class="pg-btn disabled">← Prev</span>{% endif %}
+                {% for p in range([profiles_pg.page-2,1]|max, [profiles_pg.page+2,profiles_pg.pages]|min + 1) %}
+                <a href="{{ url_for('admin.index', p_page=p, q=search_query, e_page=e_page, a_page=a_page) }}"
+                   class="pg-btn {% if p == profiles_pg.page %}active{% endif %}">{{ p }}</a>
+                {% endfor %}
+                {% if profiles_pg.has_next %}
+                <a href="{{ url_for('admin.index', p_page=profiles_pg.next_num, q=search_query, e_page=e_page, a_page=a_page) }}" class="pg-btn">Next →</a>
+                {% else %}<span class="pg-btn disabled">Next →</span>{% endif %}
+                <span class="pg-info">{{ profiles_pg.page }}/{{ profiles_pg.pages }}</span>
+            </div>
+            {% endif %}
             {% else %}
-            <p style="color: var(--text-muted);">No profiles yet. Add one above.</p>
+            <p class="admin-empty-msg">No profiles yet.</p>
             {% endif %}
         </div>
 
-        <!-- EVENTS LIST -->
+        <!-- ── ACTIVE EVENTS ──────────────────────────────────────── -->
         <div class="admin-section">
-            <h2 class="admin-section-title">All Events ({{ events|length }})</h2>
-            {% if events %}
+            <h2 class="admin-section-title">
+                Active Events <span class="count-badge">{{ events_pg.total }}</span>
+            </h2>
+            {% if events_pg.items %}
             <div class="admin-table-wrap">
                 <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Venue</th>
-                            <th>Date</th>
-                            <th>Price</th>
-                            <th>Source</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
+                    <thead><tr>
+                        <th>Title</th><th class="col-hide-mobile">Venue</th>
+                        <th>Date</th><th class="col-hide-mobile">Source</th><th>Actions</th>
+                    </tr></thead>
                     <tbody>
-                        {% for ev in events %}
-                        <tr>
-                            <td><a href="{{ url_for('events.detail', event_id=ev.id) }}">{{ ev.title[:40] }}</a></td>
-                            <td>{{ ev.venue or '—' }}</td>
-                            <td>{{ ev.date or '—' }}</td>
-                            <td>{{ ev.entry_price or '—' }}</td>
-                            <td>{{ ('@' + ev.instagram_profile) if ev.instagram_profile else '—' }}</td>
-                            <td>
-                                <form method="POST" action="{{ url_for('admin.delete_event', event_id=ev.id) }}" style="display:inline;" onsubmit="return confirm('Delete this event?')">
-                                    <button type="submit" class="btn-danger-sm">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
+                    {% for ev in events_pg.items %}
+                    <tr>
+                        <td><a href="{{ url_for('events.detail', event_id=ev.id) }}">{{ ev.title[:36] }}{% if ev.title|length > 36 %}…{% endif %}</a></td>
+                        <td class="col-hide-mobile">{{ ev.venue or '—' }}</td>
+                        <td>
+                            {{ ev.date or '—' }}
+                            {% if ev.event_date %}
+                            <span class="date-parsed" title="Parsed date">{{ ev.event_date.strftime('%d %b') }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-hide-mobile">{{ ('@' + ev.instagram_profile) if ev.instagram_profile else '—' }}</td>
+                        <td class="action-cell">
+                            <form method="POST" action="{{ url_for('admin.archive_event', event_id=ev.id) }}"
+                                  style="display:inline;" title="Archive this event">
+                                <button type="submit" class="btn-archive-sm">🗄</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin.delete_event', event_id=ev.id) }}"
+                                  style="display:inline;" onsubmit="return confirm('Delete?')">
+                                <button type="submit" class="btn-danger-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% if events_pg.pages > 1 %}
+            <div class="pagination pagination-sm">
+                {% if events_pg.has_prev %}
+                <a href="{{ url_for('admin.index', e_page=events_pg.prev_num, q=search_query, p_page=p_page, a_page=a_page) }}" class="pg-btn">← Prev</a>
+                {% else %}<span class="pg-btn disabled">← Prev</span>{% endif %}
+                {% for p in range([events_pg.page-2,1]|max, [events_pg.page+2,events_pg.pages]|min + 1) %}
+                <a href="{{ url_for('admin.index', e_page=p, q=search_query, p_page=p_page, a_page=a_page) }}"
+                   class="pg-btn {% if p == events_pg.page %}active{% endif %}">{{ p }}</a>
+                {% endfor %}
+                {% if events_pg.has_next %}
+                <a href="{{ url_for('admin.index', e_page=events_pg.next_num, q=search_query, p_page=p_page, a_page=a_page) }}" class="pg-btn">Next →</a>
+                {% else %}<span class="pg-btn disabled">Next →</span>{% endif %}
+                <span class="pg-info">{{ events_pg.page }}/{{ events_pg.pages }}</span>
+            </div>
+            {% endif %}
             {% else %}
-            <p style="color: var(--text-muted);">No events yet. Add profiles and scrape.</p>
+            <p class="admin-empty-msg">No active events.</p>
+            {% endif %}
+        </div>
+
+        <!-- ── ARCHIVED EVENTS ────────────────────────────────────── -->
+        <div class="admin-section">
+            <h2 class="admin-section-title">
+                🗄 Archived Events <span class="count-badge">{{ archived_pg.total }}</span>
+                <span class="admin-section-hint">Past events auto-archived when their date passes</span>
+            </h2>
+            {% if archived_pg.items %}
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead><tr>
+                        <th>Title</th><th class="col-hide-mobile">Venue</th>
+                        <th>Event Date</th><th class="col-hide-mobile">Archived</th><th>Actions</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for ev in archived_pg.items %}
+                    <tr class="archived-row">
+                        <td><a href="{{ url_for('events.detail', event_id=ev.id) }}">{{ ev.title[:36] }}{% if ev.title|length > 36 %}…{% endif %}</a></td>
+                        <td class="col-hide-mobile">{{ ev.venue or '—' }}</td>
+                        <td>{{ ev.event_date.strftime('%d %b %Y') if ev.event_date else (ev.date or '—') }}</td>
+                        <td class="col-hide-mobile">{{ ev.archived_at.strftime('%d %b %Y') if ev.archived_at else '—' }}</td>
+                        <td class="action-cell">
+                            <form method="POST" action="{{ url_for('admin.unarchive_event', event_id=ev.id) }}"
+                                  style="display:inline;" title="Restore to active">
+                                <button type="submit" class="btn-restore-sm">↩ Restore</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin.delete_event', event_id=ev.id) }}"
+                                  style="display:inline;" onsubmit="return confirm('Permanently delete?')">
+                                <button type="submit" class="btn-danger-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if archived_pg.pages > 1 %}
+            <div class="pagination pagination-sm">
+                {% if archived_pg.has_prev %}
+                <a href="{{ url_for('admin.index', a_page=archived_pg.prev_num, q=search_query, p_page=p_page, e_page=e_page) }}" class="pg-btn">← Prev</a>
+                {% else %}<span class="pg-btn disabled">← Prev</span>{% endif %}
+                {% for p in range([archived_pg.page-2,1]|max, [archived_pg.page+2,archived_pg.pages]|min + 1) %}
+                <a href="{{ url_for('admin.index', a_page=p, q=search_query, p_page=p_page, e_page=e_page) }}"
+                   class="pg-btn {% if p == archived_pg.page %}active{% endif %}">{{ p }}</a>
+                {% endfor %}
+                {% if archived_pg.has_next %}
+                <a href="{{ url_for('admin.index', a_page=archived_pg.next_num, q=search_query, p_page=p_page, e_page=e_page) }}" class="pg-btn">Next →</a>
+                {% else %}<span class="pg-btn disabled">Next →</span>{% endif %}
+                <span class="pg-info">{{ archived_pg.page }}/{{ archived_pg.pages }}</span>
+            </div>
+            {% endif %}
+            {% else %}
+            <p class="admin-empty-msg">No archived events yet — events auto-archive when their date passes.</p>
             {% endif %}
         </div>
 
@@ -121,55 +238,52 @@
 {% block extra_js %}
 <script>
 async function scrapeAll() {
-    const btn    = document.getElementById('scrapeAllBtn');
-    const status = document.getElementById('scrapeStatus');
+    const btn  = document.getElementById('scrapeAllBtn');
+    const stat = document.getElementById('scrapeStatus');
+    const bar  = document.getElementById('scrapeBar');
+    const prog = document.getElementById('scrapeProgress');
 
-    btn.disabled    = true;
-    btn.textContent = '⏳ Scraping...';
-    status.textContent = 'Contacting APIs — this may take 30–60 seconds…';
-    status.className   = 'scrape-status-text loading';
+    btn.disabled = true; btn.textContent = '⏳ Scraping...';
+    stat.textContent = 'Contacting APIs — may take 30–60 seconds…';
+    stat.className   = 'scrape-status-text loading';
+    prog.classList.add('visible');
+
+    let pct = 5;
+    const tick = setInterval(() => {
+        pct = Math.min(pct + Math.random() * 8, 85);
+        bar.style.width = pct + '%';
+    }, 800);
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 180000);
 
     try {
         const res = await fetch('/events/scrape', {
-            method:  'POST',
-            headers: {'Content-Type': 'application/json'},
-            body:    JSON.stringify({usernames: []}),
-            signal:  controller.signal,
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({usernames: []}), signal: controller.signal,
         });
-
-        clearTimeout(timer);
-
+        clearTimeout(timer); clearInterval(tick);
+        bar.style.width = '100%';
         let data = {};
         try { data = await res.json(); } catch(_) {}
-
         if (res.ok && data.success) {
-            status.textContent = `✅ Done! Scraped ${data.scraped_posts} posts → found ${data.events_found} events → saved ${data.events_saved} new.`;
-            status.className   = 'scrape-status-text success';
+            const arch = data.auto_archived ? ` | archived ${data.auto_archived} past` : '';
+            stat.textContent = `✅ ${data.scraped_posts} posts → ${data.events_found} events → ${data.events_saved} saved${arch}.`;
+            stat.className   = 'scrape-status-text success';
             setTimeout(() => location.reload(), 2500);
         } else {
-            status.textContent = '❌ ' + (data.error || `Server error ${res.status}`);
-            status.className   = 'scrape-status-text error';
-            console.error('[scrape]', res.status, data);
+            stat.textContent = '❌ ' + (data.error || `Error ${res.status}`);
+            stat.className   = 'scrape-status-text error';
         }
-
     } catch(e) {
-        clearTimeout(timer);
-        status.className = 'scrape-status-text error';
-        if (e.name === 'AbortError') {
-            status.textContent = '⏱ Timed out after 3 minutes. Check Flask console for errors.';
-        } else {
-            status.textContent = '❌ Network error: ' + e.message;
-        }
-        console.error('[scrape]', e);
+        clearTimeout(timer); clearInterval(tick);
+        stat.className   = 'scrape-status-text error';
+        stat.textContent = e.name === 'AbortError' ? '⏱ Timed out.' : '❌ ' + e.message;
     } finally {
-        btn.disabled    = false;
-        btn.textContent = '⚡ Scrape All Now';
+        btn.disabled = false; btn.textContent = '⚡ Scrape All Now';
+        setTimeout(() => { prog.classList.remove('visible'); bar.style.width = '0%'; }, 1500);
     }
 }
-
 document.getElementById('scrapeAllBtn').addEventListener('click', scrapeAll);
 </script>
 {% endblock %}
